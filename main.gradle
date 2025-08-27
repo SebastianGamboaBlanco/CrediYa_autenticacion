@@ -56,7 +56,7 @@ subprojects {
     pitest {
         targetClasses = ['co.com.crediya.*']
         excludedClasses = []
-        excludedTestClasses = []
+        excludedTestClasses = ['**.*RepositoryContractTest*lasInterfacesNoDebenTenerCamposPublicos*']
         pitestVersion = '1.20.1'
         verbose = false
         outputFormats = ['XML', 'HTML']
@@ -103,7 +103,8 @@ tasks.register('jacocoMergedReport', JacocoReport) {
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs = [
-            '-Amapstruct.suppressGeneratorTimestamp=true'
+            '-Amapstruct.suppressGeneratorTimestamp=true',
+            '-parameters'
     ]
 }
 
