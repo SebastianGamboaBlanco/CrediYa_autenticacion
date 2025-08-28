@@ -1,10 +1,11 @@
 package co.com.crediya.model;
 
-import co.com.crediya.model.exceptions.*;
+import co.com.crediya.model.exceptions.BusinessException;
+import co.com.crediya.model.exceptions.ErrorCode;
 import java.util.regex.Pattern;
 
 public class Usuario {
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9_%+-]+([.][a-zA-Z0-9_%+-]+)*@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9_%+-]+(?:\\.[a-zA-Z0-9_%+-]+)*@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     private static final int SALARIO_MINIMO = 0;
     private static final int SALARIO_MAXIMO = 15000000;
     
@@ -27,34 +28,36 @@ public class Usuario {
 
     private void validarNombre(String nombre){
         if(nombre == null || nombre.isBlank()) {
-            throw new NombreInvalidException();
+            throw new BusinessException(ErrorCode.NOMBRE_REQUIRED, nombre);
         }
     }
+    
     private void validarApellidos(String apellidos){
         if(apellidos == null || apellidos.isBlank()){
-            throw new ApellidoInvalidException();
+            throw new BusinessException(ErrorCode.APELLIDO_REQUIRED, apellidos);
         }
     }
+    
     private void validarCorreo(String correo){
         if(correo == null || correo.isBlank()) {
-            throw new CorreoInvalidException();
+            throw new BusinessException(ErrorCode.CORREO_REQUIRED, correo);
         }
         try {
             if(!EMAIL_PATTERN.matcher(correo).matches()) {
-                throw new CorreoFormatoInvalidException(correo);
+                throw new BusinessException(ErrorCode.CORREO_FORMAT_INVALID, correo);
             }
         } catch (Exception e) {
-            throw new CorreoFormatoInvalidException(correo);
+            throw new BusinessException(ErrorCode.CORREO_FORMAT_INVALID, correo);
         }
     }
 
     private void validarSalarioBase(Integer salarioBase){
         if(salarioBase == null ){
-            throw new SalarioInvalidException();
+            throw new BusinessException(ErrorCode.SALARIO_REQUIRED, String.valueOf(salarioBase));
         }
 
         if(salarioBase < SALARIO_MINIMO || salarioBase > SALARIO_MAXIMO) {
-            throw new SalarioRangoInvalidException();
+            throw new BusinessException(ErrorCode.SALARIO_OUT_OF_RANGE, salarioBase, SALARIO_MINIMO, SALARIO_MAXIMO);
         }
     }
 

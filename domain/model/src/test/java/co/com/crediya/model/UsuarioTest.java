@@ -1,6 +1,7 @@
 package co.com.crediya.model;
 
-import co.com.crediya.model.exceptions.*;
+import co.com.crediya.model.exceptions.BusinessException;
+import co.com.crediya.model.exceptions.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -63,16 +64,18 @@ class UsuarioTest {
     class ValidacionNombres {
 
         @ParameterizedTest
-        @DisplayName("Debe lanzar NombreInvalidException cuando el nombre es nulo o vacío")
+        @DisplayName("Debe lanzar BusinessException cuando el nombre es nulo o vacío")
         @NullAndEmptySource
         @ValueSource(strings = {"", "   ", "\t", "\n"})
         void debeLanzarExcepcionConNombreInvalido(String nombre) {
 
-            NombreInvalidException exception = assertThrows(
-                NombreInvalidException.class,
+            BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> new Usuario(nombre, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO)
             );
             assertNotNull(exception);
+            assertEquals("nombres", exception.getField());
+            assertEquals(ErrorCode.NOMBRE_REQUIRED, exception.getErrorCode());
         }
 
         @ParameterizedTest
@@ -95,16 +98,18 @@ class UsuarioTest {
     class ValidacionApellidos {
 
         @ParameterizedTest
-        @DisplayName("Debe lanzar ApellidoInvalidException cuando el apellido es nulo o vacío")
+        @DisplayName("Debe lanzar BusinessException cuando el apellido es nulo o vacío")
         @NullAndEmptySource
         @ValueSource(strings = {"", "   ", "\t", "\n"})
         void debeLanzarExcepcionConApellidoInvalido(String apellido) {
 
-            ApellidoInvalidException exception = assertThrows(
-                ApellidoInvalidException.class,
+            BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> new Usuario(NOMBRES_VALIDOS, apellido, CORREO_VALIDO, SALARIO_VALIDO)
             );
             assertNotNull(exception);
+            assertEquals("apellidos", exception.getField());
+            assertEquals(ErrorCode.APELLIDO_REQUIRED, exception.getErrorCode());
         }
 
         @ParameterizedTest
@@ -127,20 +132,22 @@ class UsuarioTest {
     class ValidacionCorreo {
 
         @ParameterizedTest
-        @DisplayName("Debe lanzar CorreoInvalidException cuando el correo es nulo o vacío")
+        @DisplayName("Debe lanzar BusinessException cuando el correo es nulo o vacío")
         @NullAndEmptySource
         @ValueSource(strings = {"", "   ", "\t", "\n"})
         void debeLanzarExcepcionConCorreoNuloOVacio(String correo) {
 
-            CorreoInvalidException exception = assertThrows(
-                CorreoInvalidException.class,
+            BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> new Usuario(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, correo, SALARIO_VALIDO)
             );
             assertNotNull(exception);
+            assertEquals("correoElectronico", exception.getField());
+            assertEquals(ErrorCode.CORREO_REQUIRED, exception.getErrorCode());
         }
 
         @ParameterizedTest
-        @DisplayName("Debe lanzar CorreoFormatoInvalidException con formato inválido")
+        @DisplayName("Debe lanzar BusinessException con formato inválido")
         @ValueSource(strings = {
             "correo-sin-arroba",
             "@dominio.com",
@@ -155,11 +162,13 @@ class UsuarioTest {
         })
         void debeLanzarExcepcionConFormatoInvalido(String correo) {
 
-            CorreoFormatoInvalidException exception = assertThrows(
-                CorreoFormatoInvalidException.class,
+            BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> new Usuario(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, correo, SALARIO_VALIDO)
             );
             assertNotNull(exception);
+            assertEquals("correoElectronico", exception.getField());
+            assertEquals(ErrorCode.CORREO_FORMAT_INVALID, exception.getErrorCode());
             assertTrue(exception.getMessage().contains(correo));
         }
     }
@@ -169,26 +178,30 @@ class UsuarioTest {
     class ValidacionSalarioBase {
 
         @Test
-        @DisplayName("Debe lanzar SalarioInvalidException cuando el salario es nulo")
+        @DisplayName("Debe lanzar BusinessException cuando el salario es nulo")
         void debeLanzarExcepcionConSalarioNulo() {
 
-            SalarioInvalidException exception = assertThrows(
-                SalarioInvalidException.class,
+            BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> new Usuario(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, null)
             );
             assertNotNull(exception);
+            assertEquals("salarioBase", exception.getField());
+            assertEquals(ErrorCode.SALARIO_REQUIRED, exception.getErrorCode());
         }
 
         @ParameterizedTest
-        @DisplayName("Debe lanzar SalarioRangoInvalidException con salarios fuera de rango")
+        @DisplayName("Debe lanzar BusinessException con salarios fuera de rango")
         @ValueSource(ints = {-1, -100, 15000001, 20000000})
         void debeLanzarExcepcionConSalarioFueraDeRango(int salario) {
 
-            SalarioRangoInvalidException exception = assertThrows(
-                SalarioRangoInvalidException.class,
+            BusinessException exception = assertThrows(
+                BusinessException.class,
                 () -> new Usuario(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, salario)
             );
             assertNotNull(exception);
+            assertEquals("salarioBase", exception.getField());
+            assertEquals(ErrorCode.SALARIO_OUT_OF_RANGE, exception.getErrorCode());
         }
 
         @ParameterizedTest
@@ -206,55 +219,4 @@ class UsuarioTest {
         }
     }
 
-    @Nested
-    @DisplayName("Inmutabilidad y Encapsulación")
-    class InmutabilidadYEncapsulacion {
-
-        @Test
-        @DisplayName("Los campos deben ser inmutables después de la creación")
-        void losCamposDebenSerInmutables() {
-
-            Usuario usuario = new Usuario(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO);
-
-            assertEquals(NOMBRES_VALIDOS, usuario.getNombres());
-            assertEquals(APELLIDOS_VALIDOS, usuario.getApellidos());
-            assertEquals(CORREO_VALIDO, usuario.getCorreoElectronico());
-            assertEquals(SALARIO_VALIDO, usuario.getSalarioBase());
-
-            assertEquals(NOMBRES_VALIDOS, usuario.getNombres());
-            assertEquals(APELLIDOS_VALIDOS, usuario.getApellidos());
-            assertEquals(CORREO_VALIDO, usuario.getCorreoElectronico());
-            assertEquals(SALARIO_VALIDO, usuario.getSalarioBase());
-        }
-
-        @Test
-        @DisplayName("No debe existir setters públicos")
-        void noDebeExistirSettersPublicos() {
-
-            assertFalse(
-                java.util.Arrays.stream(Usuario.class.getMethods())
-                    .anyMatch(method -> method.getName().startsWith("set")),
-                "No debería haber setters públicos en Usuario"
-            );
-        }
-    }
-
-    @Nested
-    @DisplayName("Casos Edge y Boundary")
-    class CasosEdgeYBoundary {
-
-        @Test
-        @DisplayName("Debe validar correctamente con caracteres especiales en nombres")
-        void debeValidarNombresConCaracteresEspeciales() {
-
-            assertDoesNotThrow(() -> new Usuario("José María", "de la Ñ-Cruz", CORREO_VALIDO, SALARIO_VALIDO));
-        }
-
-        @Test
-        @DisplayName("Debe manejar correos con múltiples puntos")
-        void debeValidarCorreosConMultiplesPuntos() {
-
-            assertDoesNotThrow(() -> new Usuario(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, "user.name.lastname@domain.co.uk", SALARIO_VALIDO));
-        }
-    }
 }

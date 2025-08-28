@@ -1,13 +1,20 @@
 package co.com.crediya.api.exception;
 
+import co.com.crediya.api.dto.FieldError;
 import co.com.crediya.api.dto.UsuarioResponse;
-import co.com.crediya.model.exceptions.*;
+import co.com.crediya.api.dto.ValidationErrorResponse;
+import co.com.crediya.model.exceptions.BusinessException;
+import co.com.crediya.model.exceptions.ErrorType;
+import co.com.crediya.model.exceptions.MultipleValidationException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 import java.time.format.DateTimeParseException;
 
 @Slf4j
@@ -20,31 +27,31 @@ public class ErrorHandler {
         
         log.error("Error procesando request - Tipo: {}, Mensaje: {}", errorType, errorMessage, error);
 
-        // Errores de validación del dominio
-        if (isValidationError(error)) {
-            log.warn("Error de validación del dominio - Tipo: {}, Mensaje: {}", errorType, errorMessage);
+        if (error instanceof BusinessException businessException) {
+            return handleBusinessException(businessException);
+        }
+
+        if (error instanceof MultipleValidationException multipleValidationException) {
+            log.warn("Múltiples errores de validación - Cantidad: {}", multipleValidationException.getErrors().size());
             return ServerResponse.badRequest()
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(UsuarioResponse.error(errorMessage));
+                .bodyValue(ValidationErrorResponse.from(multipleValidationException.getErrors()));
         }
 
-        // Email ya existe
-        if (error instanceof CorreoExistInvalidException) {
-            log.warn("Intento de registro con email existente - Error: {}", errorMessage);
-            return ServerResponse.status(HttpStatus.CONFLICT)
+        if (error instanceof MismatchedInputException mismatchedInputException) {
+            String fieldName = mismatchedInputException.getPath().isEmpty() ? "unknown" : 
+                               mismatchedInputException.getPath().get(0).getFieldName();
+            String message = "Campo obligatorio no proporcionado: " + fieldName;
+            
+            List<FieldError> fieldErrors = List.of(new FieldError(fieldName, message, null));
+            ValidationErrorResponse response = new ValidationErrorResponse("400", fieldErrors);
+            
+            log.warn("Campo obligatorio faltante - Campo: {}", fieldName);
+            return ServerResponse.badRequest()
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(UsuarioResponse.conflict(errorMessage));
+                .bodyValue(response);
         }
 
-        // Documento de identidad ya existe
-        if (error instanceof DocumentoExistInvalidException) {
-            log.warn("Intento de registro con documento de identidad existente - Error: {}", errorMessage);
-            return ServerResponse.status(HttpStatus.CONFLICT)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(UsuarioResponse.conflict(errorMessage));
-        }
-
-        // Errores de validación de Bean Validation
         if (error instanceof IllegalArgumentException) {
             log.warn("Error de validación Bean Validation - Mensaje: {}", errorMessage);
             return ServerResponse.badRequest()
@@ -52,7 +59,6 @@ public class ErrorHandler {
                 .bodyValue(UsuarioResponse.error(errorMessage));
         }
 
-        // Error de formato de fecha
         if (error instanceof DateTimeParseException) {
             String mensajeClaro = "Formato de fecha inválido. Use el formato MM-dd-yyyy (ejemplo: 05-15-1990)";
             log.warn("Error de formato de fecha - Mensaje: {}", errorMessage);
@@ -61,23 +67,7 @@ public class ErrorHandler {
                 .bodyValue(UsuarioResponse.error(mensajeClaro));
         }
 
-        // Error de formato de documento de identidad
-        if (error instanceof DocumentoFormatoInvalidException) {
-            log.warn("Error de formato de documento - Mensaje: {}", errorMessage);
-            return ServerResponse.badRequest()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(UsuarioResponse.error(errorMessage));
-        }
 
-        // Error de rol inválido
-        if (error instanceof RolInvalidException) {
-            log.warn("Error de rol inválido - Mensaje: {}", errorMessage);
-            return ServerResponse.badRequest()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(UsuarioResponse.error(errorMessage));
-        }
-
-        // Error de violación de foreign key (rol inexistente en BD)
         if (error.getMessage() != null && error.getMessage().contains("fk_usuario_rol")) {
             String mensajeClaro = "El rol especificado no existe en el sistema";
             log.warn("Violación de Foreign Key constraint - Rol inexistente: {}", errorMessage);
@@ -86,20 +76,27 @@ public class ErrorHandler {
                 .bodyValue(UsuarioResponse.error(mensajeClaro));
         }
 
-        // Error genérico
         log.error("Error interno no manejado - Tipo: {}, Mensaje: {}", errorType, errorMessage, error);
         return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(UsuarioResponse.internalError("Error interno del servidor"));
     }
 
-    private boolean isValidationError(Throwable error) {
-        return error instanceof NombreInvalidException ||
-               error instanceof ApellidoInvalidException ||
-               error instanceof CorreoInvalidException ||
-               error instanceof CorreoFormatoInvalidException ||
-               error instanceof SalarioInvalidException ||
-               error instanceof SalarioRangoInvalidException ||
-               error instanceof RolInvalidException;
+    private Mono<ServerResponse> handleBusinessException(BusinessException businessException) {
+        String errorMessage = businessException.getMessage();
+        ErrorType errorType = businessException.getErrorType();
+        
+        log.warn("Error de negocio - Tipo: {}, Campo: {}, Valor: {}, Mensaje: {}", 
+                errorType, businessException.getField(), businessException.getValue(), errorMessage);
+        
+        return switch (errorType) {
+            case VALIDATION, FORMAT, OUT_OF_RANGE -> ServerResponse.badRequest()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(UsuarioResponse.error(errorMessage));
+                
+            case ALREADY_EXISTS -> ServerResponse.status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(UsuarioResponse.conflict(errorMessage));
+        };
     }
 }

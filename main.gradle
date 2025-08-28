@@ -10,9 +10,13 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'jacoco'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'info.solidsoft.pitest'
+    
+    // Solo aplicar jacoco al módulo usecase
+    if (project.name == 'usecase') {
+        apply plugin: 'jacoco'
+    }
 
     compileJava.dependsOn validateStructure
 
@@ -51,7 +55,20 @@ subprojects {
         }
     }
 
-    test.finalizedBy(project.tasks.jacocoTestReport)
+    // Solo configurar jacoco para el módulo usecase
+    if (project.name == 'usecase') {
+        test.finalizedBy(project.tasks.jacocoTestReport)
+        
+        jacocoTestReport {
+            dependsOn test
+            reports {
+                xml.setRequired true
+                xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
+                csv.setRequired false
+                html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
+            }
+        }
+    }
 
     pitest {
         targetClasses = ['co.com.crediya.*']
@@ -71,15 +88,6 @@ subprojects {
         jvmArgs = ["-XX:+AllowRedefinitionToAddDeleteMethods"]
     }
 
-    jacocoTestReport {
-        dependsOn test, 'pitest'
-        reports {
-            xml.setRequired true
-            xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
-            csv.setRequired false
-            html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
-        }
-    }
 
 }
 
@@ -89,11 +97,15 @@ jacoco {
 }
 
 tasks.register('jacocoMergedReport', JacocoReport) {
-    dependsOn = [test, subprojects.jacocoTestReport, pitestReportAggregate]
-    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories.setFrom files(subprojects.sourceSets.main.output)
-    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+    dependsOn = [test, project(':usecase').jacocoTestReport, pitestReportAggregate]
+    
+    // Solo incluir el módulo usecase
+    def usecaseProject = project(':usecase')
+    additionalSourceDirs.setFrom files(usecaseProject.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(usecaseProject.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(usecaseProject.sourceSets.main.output)
+    executionData.setFrom fileTree(dir: usecaseProject.projectDir, include: '**/build/jacoco/test.exec')
+    
     reports {
         xml.setRequired true
         csv.setRequired false

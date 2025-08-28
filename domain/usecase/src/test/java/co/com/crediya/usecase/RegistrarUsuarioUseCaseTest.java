@@ -1,7 +1,7 @@
 package co.com.crediya.usecase;
 
 import co.com.crediya.model.Usuario;
-import co.com.crediya.model.exceptions.*;
+import co.com.crediya.model.exceptions.BusinessException;
 import co.com.crediya.model.gateways.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,7 +47,6 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe registrar usuario cuando datos son válidos")
         void debeRegistrarUsuarioCuandoDatosSonValidos() {
-            // Arrange
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
@@ -55,13 +54,11 @@ class RegistrarUsuarioUseCaseTest {
             when(usuarioRepository.registrarUsuario(any(Usuario.class), anyString(), anyString(), anyString(), anyLong()))
                 .thenReturn(Mono.empty());
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
                 .verifyComplete();
 
-            // Verify interactions
             verify(usuarioRepository).existeEmail(CORREO_VALIDO);
             verify(usuarioRepository).existeDocumentoIdentidad(DOCUMENTO_VALIDO);
             verify(usuarioRepository).registrarUsuario(any(Usuario.class), eq(DOCUMENTO_VALIDO), 
@@ -71,7 +68,7 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe crear usuario con los datos correctos antes de registrar")
         void debeCrearUsuarioConDatosCorrectosAntesDeRegistrar() {
-            // Arrange
+
             when(usuarioRepository.existeEmail(anyString()))
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(anyString()))
@@ -84,13 +81,11 @@ class RegistrarUsuarioUseCaseTest {
             String correo = "maria.gonzalez@test.com";
             Integer salario = 8000000;
 
-            // Act
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     nombres, apellidos, correo, salario,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
                 .verifyComplete();
 
-            // Assert - Verificar que el usuario se creó con los datos correctos
             verify(usuarioRepository).registrarUsuario(argThat(usuario -> 
                 usuario.getNombres().equals(nombres) &&
                 usuario.getApellidos().equals(apellidos) &&
@@ -107,18 +102,16 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe fallar cuando el email ya existe")
         void debeFallarCuandoEmailYaExiste() {
-            // Arrange
+
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(true));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
-                .expectError(CorreoExistInvalidException.class)
+                .expectError(BusinessException.class)
                 .verify();
 
-            // Verify que no se verificó documento ni se intentó registrar
             verify(usuarioRepository, never()).existeDocumentoIdentidad(anyString());
             verify(usuarioRepository, never()).registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong());
         }
@@ -131,32 +124,30 @@ class RegistrarUsuarioUseCaseTest {
         })
         @DisplayName("Debe fallar para diferentes emails existentes")
         void debeFallarParaDiferentesEmailsExistentes(String emailExistente) {
-            // Arrange
+
             when(usuarioRepository.existeEmail(emailExistente))
                 .thenReturn(Mono.just(true));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, emailExistente, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
-                .expectError(CorreoExistInvalidException.class)
+                .expectError(BusinessException.class)
                 .verify();
         }
 
         @Test
         @DisplayName("Debe contener el email en el mensaje de error")
         void debeContenerEmailEnMensajeDeError() {
-            // Arrange
+
             String emailDuplicado = "duplicado@test.com";
             when(usuarioRepository.existeEmail(emailDuplicado))
                 .thenReturn(Mono.just(true));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, emailDuplicado, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
                 .expectErrorMatches(error -> 
-                    error instanceof CorreoExistInvalidException &&
+                    error instanceof BusinessException &&
                     error.getMessage().contains(emailDuplicado))
                 .verify();
         }
@@ -169,20 +160,18 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe fallar cuando el documento ya existe")
         void debeFallarCuandoDocumentoYaExiste() {
-            // Arrange
+
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
                 .thenReturn(Mono.just(true));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
-                .expectError(DocumentoExistInvalidException.class)
+                .expectError(BusinessException.class)
                 .verify();
 
-            // Verify que no se intentó registrar
             verify(usuarioRepository, never()).registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong());
         }
 
@@ -190,36 +179,34 @@ class RegistrarUsuarioUseCaseTest {
         @ValueSource(strings = {"12345678", "87654321", "11223344", "55667788"})
         @DisplayName("Debe fallar para diferentes documentos existentes")
         void debeFallarParaDiferentesDocumentosExistentes(String documentoExistente) {
-            // Arrange
+
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(documentoExistente))
                 .thenReturn(Mono.just(true));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     documentoExistente, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
-                .expectError(DocumentoExistInvalidException.class)
+                .expectError(BusinessException.class)
                 .verify();
         }
 
         @Test
         @DisplayName("Debe contener el documento en el mensaje de error")
         void debeContenerDocumentoEnMensajeDeError() {
-            // Arrange
+
             String documentoDuplicado = "99988877";
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(documentoDuplicado))
                 .thenReturn(Mono.just(true));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     documentoDuplicado, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
                 .expectErrorMatches(error -> 
-                    error instanceof DocumentoExistInvalidException &&
+                    error instanceof BusinessException &&
                     error.getMessage().contains(documentoDuplicado))
                 .verify();
         }
@@ -232,25 +219,24 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe fallar cuando nombres son inválidos")
         void debeFallarCuandoNombresSonInvalidos() {
-            // Act & Assert
+
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     null, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
-                .expectError(NombreInvalidException.class)
+                .expectError(BusinessException.class)
                 .verify();
 
-            // Verify que no se llamó a ningún repository
             verifyNoInteractions(usuarioRepository);
         }
 
         @Test
         @DisplayName("Debe fallar cuando apellidos son inválidos")
         void debeFallarCuandoApellidosSonInvalidos() {
-            // Act & Assert
+
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, "", CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
-                .expectError(ApellidoInvalidException.class)
+                .expectError(BusinessException.class)
                 .verify();
 
             verifyNoInteractions(usuarioRepository);
@@ -259,11 +245,11 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe fallar cuando correo es inválido")
         void debeFallarCuandoCorreoEsInvalido() {
-            // Act & Assert
+
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, "correo-invalido", SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
-                .expectError(CorreoFormatoInvalidException.class)
+                .expectError(BusinessException.class)
                 .verify();
 
             verifyNoInteractions(usuarioRepository);
@@ -272,11 +258,11 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe fallar cuando salario es inválido")
         void debeFallarCuandoSalarioEsInvalido() {
-            // Act & Assert
+
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, -1000,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
-                .expectError(SalarioRangoInvalidException.class)
+                .expectError(BusinessException.class)
                 .verify();
 
             verifyNoInteractions(usuarioRepository);
@@ -290,12 +276,11 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe propagar error al verificar existencia de email")
         void debePropagarErrorAlVerificarExistenciaEmail() {
-            // Arrange
+
             RuntimeException repositoryError = new RuntimeException("Database connection failed");
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.error(repositoryError));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
@@ -306,14 +291,13 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe propagar error al verificar existencia de documento")
         void debePropagarErrorAlVerificarExistenciaDocumento() {
-            // Arrange
+
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(false));
             RuntimeException repositoryError = new RuntimeException("Network timeout");
             when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
                 .thenReturn(Mono.error(repositoryError));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
@@ -324,7 +308,7 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe propagar error al registrar usuario")
         void debePropagarErrorAlRegistrarUsuario() {
-            // Arrange
+
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
@@ -333,7 +317,6 @@ class RegistrarUsuarioUseCaseTest {
             when(usuarioRepository.registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong()))
                 .thenReturn(Mono.error(repositoryError));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
@@ -349,7 +332,7 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe ejecutar validaciones en el orden correcto")
         void debeEjecutarValidacionesEnOrdenCorrecto() {
-            // Arrange - Usar InOrder para verificar secuencia
+
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
@@ -357,13 +340,11 @@ class RegistrarUsuarioUseCaseTest {
             when(usuarioRepository.registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong()))
                 .thenReturn(Mono.empty());
 
-            // Act
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
                 .verifyComplete();
 
-            // Assert - Verificar orden de ejecución
             var inOrder = inOrder(usuarioRepository);
             inOrder.verify(usuarioRepository).existeEmail(CORREO_VALIDO);
             inOrder.verify(usuarioRepository).existeDocumentoIdentidad(DOCUMENTO_VALIDO);
@@ -373,11 +354,10 @@ class RegistrarUsuarioUseCaseTest {
         @Test
         @DisplayName("Debe manejar cancelación del flujo reactivo")
         void debeManejarCancelacionDelFlujoReactivo() {
-            // Arrange
+
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(false).delayElement(java.time.Duration.ofMillis(100)));
 
-            // Act & Assert
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))

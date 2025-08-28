@@ -37,15 +37,15 @@ class ConsultarUsuarioUseCaseTest {
         consultarUsuarioUseCase = new ConsultarUsuarioUseCase(usuarioRepository);
         
         usuarioCompletoEsperado = new UsuarioCompleto(
-            1L,  // id
-            "Juan Carlos",  // nombres
-            "Pérez García",  // apellidos
-            "juan.perez@example.com",  // correoElectronico
-            "12345678",  // documentoIdentidad
-            LocalDate.of(1990, 5, 15),  // fechaNacimiento
-            "3001234567",  // telefono
-            1L,  // idRol
-            5000000  // salarioBase
+            1L,
+            "Juan Carlos",
+            "Pérez García",
+            "juan.perez@example.com",
+            "12345678",
+            LocalDate.of(1990, 5, 15),
+            "3001234567",
+            1L,
+            5000000
         );
     }
 
@@ -72,15 +72,15 @@ class ConsultarUsuarioUseCaseTest {
         void debeRetornarUsuarioCorrectoConTodosLosCampos() {
 
             UsuarioCompleto usuarioCompleto = new UsuarioCompleto(
-                2L,  // id
-                "María Elena",  // nombres
-                "González Martínez",  // apellidos
-                "maria.gonzalez@test.com",  // correoElectronico
-                "87654321",  // documentoIdentidad
-                LocalDate.of(1985, 12, 25),  // fechaNacimiento
-                "3109876543",  // telefono
-                2L,  // idRol
-                8000000  // salarioBase
+                2L,
+                "María Elena",
+                "González Martínez",
+                "maria.gonzalez@test.com",
+                "87654321",
+                LocalDate.of(1985, 12, 25),
+                "3109876543",
+                2L,
+                8000000
             );
             
             when(usuarioRepository.buscarPorDocumentoIdentidad("87654321"))
@@ -107,15 +107,15 @@ class ConsultarUsuarioUseCaseTest {
         void debeConsultarCorrectamenteDiferentesDocumentos(String documento) {
 
             UsuarioCompleto usuario = new UsuarioCompleto(
-                3L,  // id
-                "Usuario Test",  // nombres
-                "Apellido Test",  // apellidos
-                "test@example.com",  // correoElectronico
-                documento,  // documentoIdentidad
-                LocalDate.now().minusYears(25),  // fechaNacimiento
-                "3001112233",  // telefono
-                1L,  // idRol
-                3000000  // salarioBase
+                3L,
+                "Usuario Test",
+                "Apellido Test",
+                "test@example.com",
+                documento,
+                LocalDate.now().minusYears(25),
+                "3001112233",
+                1L,
+                3000000
             );
             
             when(usuarioRepository.buscarPorDocumentoIdentidad(documento))
@@ -324,27 +324,27 @@ class ConsultarUsuarioUseCaseTest {
         void debeRetornarExactamenteLQueRetornaElRepository() {
 
             UsuarioCompleto usuario1 = new UsuarioCompleto(
-                10L,  // id
-                "Usuario1",  // nombres
-                "Apellido1",  // apellidos
-                "user1@test.com",  // correoElectronico
-                "DOC001",  // documentoIdentidad
-                LocalDate.now(),  // fechaNacimiento
-                "3001111111",  // telefono
-                1L,  // idRol
-                1000000  // salarioBase
+                10L,
+                "Usuario1",
+                "Apellido1",
+                "user1@test.com",
+                "DOC001",
+                LocalDate.now(),
+                "3001111111",
+                1L,
+                1000000
             );
             
             UsuarioCompleto usuario2 = new UsuarioCompleto(
-                11L,  // id
-                "Usuario2",  // nombres
-                "Apellido2",  // apellidos
-                "user2@test.com",  // correoElectronico
-                "DOC002",  // documentoIdentidad
-                LocalDate.now(),  // fechaNacimiento
-                "3002222222",  // telefono
-                2L,  // idRol
-                2000000  // salarioBase
+                11L,
+                "Usuario2",
+                "Apellido2",
+                "user2@test.com",
+                "DOC002",
+                LocalDate.now(),
+                "3002222222",
+                2L,
+                2000000
             );
 
             when(usuarioRepository.buscarPorDocumentoIdentidad("DOC001"))
