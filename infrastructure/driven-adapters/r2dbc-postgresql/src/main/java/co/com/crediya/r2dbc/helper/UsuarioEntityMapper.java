@@ -2,6 +2,7 @@ package co.com.crediya.r2dbc.helper;
 
 import co.com.crediya.model.Usuario;
 import co.com.crediya.model.UsuarioCompleto;
+import co.com.crediya.model.valueobjects.Role;
 import co.com.crediya.r2dbc.entity.UsuarioEntity;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
@@ -13,7 +14,7 @@ public class UsuarioEntityMapper {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
     public UsuarioEntity toEntity(Usuario usuario, String documentoIdentidad, String fechaNacimiento, 
-                                   String telefono, Long idRol){
+                                   String telefono, Long idRol, String password){
         LocalDate fecha = fechaNacimiento != null && !fechaNacimiento.trim().isEmpty() 
             ? LocalDate.parse(fechaNacimiento.trim(), FORMATTER) 
             : null;
@@ -27,6 +28,7 @@ public class UsuarioEntityMapper {
                 .telefono(telefono)
                 .idRol(idRol)
                 .salarioBase(usuario.getSalarioBase())
+                .password(password)
                 .build();
     }
 
@@ -49,5 +51,21 @@ public class UsuarioEntityMapper {
                 usuarioEntity.getIdRol(),
                 usuarioEntity.getSalarioBase()
         );
+    }
+
+    public UsuarioCompleto toUsuarioCompletoWithRole(UsuarioEntity usuarioEntity, Role role) {
+        UsuarioCompleto usuario = new UsuarioCompleto(
+                usuarioEntity.getId(),
+                usuarioEntity.getNombres(),
+                usuarioEntity.getApellidos(),
+                usuarioEntity.getCorreo(),
+                usuarioEntity.getDocumentoIdentidad(),
+                usuarioEntity.getFechaNacimiento(),
+                usuarioEntity.getTelefono(),
+                usuarioEntity.getIdRol(),
+                usuarioEntity.getSalarioBase()
+        );
+        usuario.setRole(role);
+        return usuario;
     }
 }

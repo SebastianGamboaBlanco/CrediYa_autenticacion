@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import reactor.util.function.Tuple3;
+import co.com.crediya.api.helper.TraceUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,11 +18,14 @@ import java.util.stream.Collectors;
 @Schema(description = "Respuesta con múltiples errores de validación")
 public class ValidationErrorResponse {
     
-    @Schema(description = "Código de estado HTTP", example = "400")
-    private String status;
+    @Schema(description = "Código de respuesta: 0=éxito, 1=error", example = "1")
+    private int code;
     
     @Schema(description = "Lista de errores específicos")
     private List<FieldError> errores;
+    
+    @Schema(description = "ID de trazabilidad para seguimiento de errores", example = "abc123-def456")
+    private String trace;
     
     public static ValidationErrorResponse from(List<Tuple3<String, String, String>> validationErrors) {
         List<FieldError> fieldErrors = validationErrors.stream()
@@ -33,6 +37,6 @@ public class ValidationErrorResponse {
             ))
             .collect(Collectors.toList());
             
-        return new ValidationErrorResponse("400", fieldErrors);
+        return new ValidationErrorResponse(1, fieldErrors, TraceUtils.getCurrentTrace());
     }
 }

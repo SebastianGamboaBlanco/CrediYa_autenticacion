@@ -3,15 +3,24 @@ package co.com.crediya.api.exception;
 import co.com.crediya.api.dto.FieldError;
 import co.com.crediya.api.dto.UsuarioResponse;
 import co.com.crediya.api.dto.ValidationErrorResponse;
+import co.com.crediya.api.dto.AuthErrorResponse;
+import co.com.crediya.api.dto.LoginResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+import co.com.crediya.api.helper.TraceUtils;
 import co.com.crediya.model.exceptions.BusinessException;
 import co.com.crediya.model.exceptions.ErrorType;
 import co.com.crediya.model.exceptions.MultipleValidationException;
+import co.com.crediya.model.exceptions.InsufficientPermissionsException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.core.io.buffer.DataBuffer;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -21,6 +30,12 @@ import java.time.format.DateTimeParseException;
 @Component
 public class ErrorHandler {
 
+    private final ObjectMapper objectMapper;
+
+    public ErrorHandler(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     public Mono<ServerResponse> handleError(Throwable error) {
         String errorType = error.getClass().getSimpleName();
         String errorMessage = error.getMessage();
@@ -29,6 +44,10 @@ public class ErrorHandler {
 
         if (error instanceof BusinessException businessException) {
             return handleBusinessException(businessException);
+        }
+
+        if (error instanceof InsufficientPermissionsException permissionsException) {
+            return handleInsufficientPermissionsException(permissionsException);
         }
 
         if (error instanceof MultipleValidationException multipleValidationException) {
@@ -44,7 +63,7 @@ public class ErrorHandler {
             String message = "Campo obligatorio no proporcionado: " + fieldName;
             
             List<FieldError> fieldErrors = List.of(new FieldError(fieldName, message, null));
-            ValidationErrorResponse response = new ValidationErrorResponse("400", fieldErrors);
+            ValidationErrorResponse response = new ValidationErrorResponse(1, fieldErrors, TraceUtils.getCurrentTrace());
             
             log.warn("Campo obligatorio faltante - Campo: {}", fieldName);
             return ServerResponse.badRequest()
@@ -77,9 +96,33 @@ public class ErrorHandler {
         }
 
         log.error("Error interno no manejado - Tipo: {}, Mensaje: {}", errorType, errorMessage, error);
-        return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        /*return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(UsuarioResponse.internalError("Error interno del servidor"));
+            .bodyValue(UsuarioResponse.internalError("Error interno del servidor"));*/
+        return ServerResponse.badRequest()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(UsuarioResponse.error(String.valueOf(error)));
+    }
+
+    public Mono<ServerResponse> handleAuthenticationError(Throwable error) {
+        log.error("🔥 ERROR DE AUTENTICACION JWT - ENTRANDO AL HANDLER: {}", error.getMessage());
+
+        AuthErrorResponse response = buildAuthErrorResponse(error);
+        return ServerResponse.status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(response);
+    }
+
+    private AuthErrorResponse buildAuthErrorResponse(Throwable error) {
+        String errorMessage = error.getMessage();
+        
+        if (errorMessage != null && errorMessage.contains("Token JWT no encontrado")) {
+            return AuthErrorResponse.tokenRequired();
+        } else if (errorMessage != null && errorMessage.contains("inválido")) {
+            return AuthErrorResponse.tokenInvalid();
+        } else {
+            return AuthErrorResponse.unauthorized("Error de autenticación");
+        }
     }
 
     private Mono<ServerResponse> handleBusinessException(BusinessException businessException) {
@@ -99,4 +142,37 @@ public class ErrorHandler {
                 .bodyValue(UsuarioResponse.conflict(errorMessage));
         };
     }
+
+    private Mono<ServerResponse> handleInsufficientPermissionsException(InsufficientPermissionsException permissionsException) {
+        String errorMessage = permissionsException.getMessage();
+        String userId = permissionsException.getUserId();
+        String requiredRole = permissionsException.getRequiredRole();
+        String userRole = permissionsException.getUserRole();
+        
+        log.warn("Permisos insuficientes - Usuario ID: {}, Rol actual: {}, Rol requerido: {}, Mensaje: {}", 
+                userId, userRole, requiredRole, errorMessage);
+        
+        return ServerResponse.status(HttpStatus.FORBIDDEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(UsuarioResponse.error(errorMessage));
+    }
+
+    public Mono<Void> handleJwtAuthenticationError(ServerWebExchange exchange, Throwable error) {
+        log.error("🔥 ERROR DE AUTENTICACION JWT - HANDLER CENTRALIZADO: {}", error.getMessage());
+        
+        AuthErrorResponse authResponse = buildAuthErrorResponse(error);
+        
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        exchange.getResponse().getHeaders().add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+        try {
+            String responseBody = objectMapper.writeValueAsString(authResponse);
+            DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(responseBody.getBytes());
+            return exchange.getResponse().writeWith(Mono.just(buffer));
+        } catch (Exception e) {
+            log.error("Error serializando respuesta de autenticación", e);
+            return exchange.getResponse().setComplete();
+        }
+    }
+
 }

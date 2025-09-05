@@ -1,81 +1,100 @@
 package co.com.crediya.model;
 
-import co.com.crediya.model.exceptions.BusinessException;
-import co.com.crediya.model.exceptions.ErrorCode;
-import java.util.regex.Pattern;
+import co.com.crediya.model.valueobjects.Email;
+import co.com.crediya.model.valueobjects.NombreCompleto;
+import co.com.crediya.model.valueobjects.SalarioBase;
 
 public class Usuario {
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9_%+-]+(?:\\.[a-zA-Z0-9_%+-]+)*@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    private static final int SALARIO_MINIMO = 0;
-    private static final int SALARIO_MAXIMO = 15000000;
-    
-    private final String nombres;
-    private final String apellidos;
-    private final String correoElectronico;
-    private final Integer salarioBase;
+    private final NombreCompleto nombreCompleto;
+    private final Email correoElectronico;
+    private final SalarioBase salarioBase;
+
+    private Usuario(Builder builder) {
+        this.nombreCompleto = builder.nombreCompleto;
+        this.correoElectronico = builder.correoElectronico;
+        this.salarioBase = builder.salarioBase;
+    }
 
     public Usuario(String nombres, String apellidos, String correoElectronico, Integer salarioBase) {
-        validarNombre(nombres);
-        validarApellidos(apellidos);
-        validarCorreo(correoElectronico);
-        validarSalarioBase(salarioBase);
-        
-        this.nombres = nombres;
-        this.apellidos = apellidos;
-        this.correoElectronico = correoElectronico;
-        this.salarioBase = salarioBase;
+        this.nombreCompleto = NombreCompleto.of(nombres, apellidos);
+        this.correoElectronico = Email.of(correoElectronico);
+        this.salarioBase = SalarioBase.of(salarioBase);
     }
 
-    private void validarNombre(String nombre){
-        if(nombre == null || nombre.isBlank()) {
-            throw new BusinessException(ErrorCode.NOMBRE_REQUIRED, nombre);
-        }
+    public static Builder builder() {
+        return new Builder();
     }
-    
-    private void validarApellidos(String apellidos){
-        if(apellidos == null || apellidos.isBlank()){
-            throw new BusinessException(ErrorCode.APELLIDO_REQUIRED, apellidos);
-        }
-    }
-    
-    private void validarCorreo(String correo){
-        if(correo == null || correo.isBlank()) {
-            throw new BusinessException(ErrorCode.CORREO_REQUIRED, correo);
-        }
-        try {
-            if(!EMAIL_PATTERN.matcher(correo).matches()) {
-                throw new BusinessException(ErrorCode.CORREO_FORMAT_INVALID, correo);
-            }
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.CORREO_FORMAT_INVALID, correo);
-        }
-    }
-
-    private void validarSalarioBase(Integer salarioBase){
-        if(salarioBase == null ){
-            throw new BusinessException(ErrorCode.SALARIO_REQUIRED, String.valueOf(salarioBase));
-        }
-
-        if(salarioBase < SALARIO_MINIMO || salarioBase > SALARIO_MAXIMO) {
-            throw new BusinessException(ErrorCode.SALARIO_OUT_OF_RANGE, salarioBase, SALARIO_MINIMO, SALARIO_MAXIMO);
-        }
-    }
-
 
     public String getNombres() {
-        return nombres;
+        return nombreCompleto.getNombres();
     }
 
     public String getApellidos() {
-        return apellidos;
+        return nombreCompleto.getApellidos();
     }
 
     public String getCorreoElectronico() {
+        return correoElectronico.getValor();
+    }
+
+    public Integer getSalarioBase() {
+        return salarioBase.getValor();
+    }
+
+    public NombreCompleto getNombreCompleto() {
+        return nombreCompleto;
+    }
+
+    public Email getEmail() {
         return correoElectronico;
     }
 
-
-    public Integer getSalarioBase() {
+    public SalarioBase getSalario() {
         return salarioBase;
+    }
+
+    public static class Builder {
+        private NombreCompleto nombreCompleto;
+        private Email correoElectronico;
+        private SalarioBase salarioBase;
+
+        private Builder() {}
+
+        public Builder conNombreCompleto(String nombres, String apellidos) {
+            this.nombreCompleto = NombreCompleto.of(nombres, apellidos);
+            return this;
+        }
+
+        public Builder conNombreCompleto(NombreCompleto nombreCompleto) {
+            this.nombreCompleto = nombreCompleto;
+            return this;
+        }
+
+        public Builder conEmail(String email) {
+            this.correoElectronico = Email.of(email);
+            return this;
+        }
+
+        public Builder conEmail(Email email) {
+            this.correoElectronico = email;
+            return this;
+        }
+
+        public Builder conSalarioBase(Integer salario) {
+            this.salarioBase = SalarioBase.of(salario);
+            return this;
+        }
+
+        public Builder conSalarioBase(SalarioBase salarioBase) {
+            this.salarioBase = salarioBase;
+            return this;
+        }
+
+        public Usuario build() {
+            if (nombreCompleto == null || correoElectronico == null || salarioBase == null) {
+                throw new IllegalArgumentException("Todos los campos son requeridos para construir un Usuario");
+            }
+            return new Usuario(this);
+        }
     }
 }

@@ -17,8 +17,10 @@ public enum ErrorCode {
     DOCUMENTO_ALREADY_EXISTS("documentoIdentidad", ErrorType.ALREADY_EXISTS, "Ya existe un usuario registrado con el documento '%s'"),
     
 
-    SALARIO_OUT_OF_RANGE("salarioBase", ErrorType.OUT_OF_RANGE, "El salario debe estar entre %d y %d");
-    
+    SALARIO_OUT_OF_RANGE("salarioBase", ErrorType.OUT_OF_RANGE, "El salario debe estar entre %d y %d"),
+
+    CORREO_NOT_EXISTS("email", ErrorType.VALIDATION,"Correo electronico no existe"),
+    PASSWORD_INVALID("password",ErrorType.VALIDATION,"Contraseña invalida");
     private final String field;
     private final ErrorType type;
     private final String messageTemplate;

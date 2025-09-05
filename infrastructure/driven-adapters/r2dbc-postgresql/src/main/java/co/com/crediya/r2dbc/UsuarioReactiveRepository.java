@@ -12,4 +12,6 @@ public interface UsuarioReactiveRepository extends ReactiveCrudRepository<Usuari
 
     Mono<UsuarioEntity> findByDocumentoIdentidad(String documentoIdentidad);
 
+    Mono<UsuarioEntity> findByCorreo(String correo);
+
 }

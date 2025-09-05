@@ -1,5 +1,9 @@
 package co.com.crediya.config;
 
+import co.com.crediya.model.gateways.AutenticacionRepository;
+import co.com.crediya.model.gateways.JwtTokenService;
+import co.com.crediya.model.gateways.PasswordService;
+import co.com.crediya.usecase.AutenticacionUseCase;
 import co.com.crediya.usecase.RegistrarUsuarioUseCase;
 import co.com.crediya.usecase.ConsultarUsuarioUseCase;
 import co.com.crediya.model.gateways.UsuarioRepository;
@@ -17,12 +21,17 @@ import org.springframework.context.annotation.FilterType;
 public class UseCasesConfig {
 
     @Bean  
-    public RegistrarUsuarioUseCase registrarUsuarioUseCase(UsuarioRepository usuarioRepository) {
-        return new RegistrarUsuarioUseCase(usuarioRepository);
+    public RegistrarUsuarioUseCase registrarUsuarioUseCase(UsuarioRepository usuarioRepository, PasswordService passwordService) {
+        return new RegistrarUsuarioUseCase(usuarioRepository, passwordService);
     }
 
     @Bean
     public ConsultarUsuarioUseCase consultarUsuarioUseCase(UsuarioRepository usuarioRepository) {
         return new ConsultarUsuarioUseCase(usuarioRepository);
+    }
+
+    @Bean
+    public AutenticacionUseCase autenticacionUseCase(AutenticacionRepository autenticacionRepository, JwtTokenService jwtTokenService) {
+        return new AutenticacionUseCase(autenticacionRepository, jwtTokenService);
     }
 }

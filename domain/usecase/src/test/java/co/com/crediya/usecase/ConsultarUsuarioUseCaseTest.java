@@ -328,7 +328,7 @@ class ConsultarUsuarioUseCaseTest {
                 "Usuario1",
                 "Apellido1",
                 "user1@test.com",
-                "DOC001",
+                "10001111",
                 LocalDate.now(),
                 "3001111111",
                 1L,
@@ -340,29 +340,29 @@ class ConsultarUsuarioUseCaseTest {
                 "Usuario2",
                 "Apellido2",
                 "user2@test.com",
-                "DOC002",
+                "10002222",
                 LocalDate.now(),
                 "3002222222",
                 2L,
                 2000000
             );
 
-            when(usuarioRepository.buscarPorDocumentoIdentidad("DOC001"))
+            when(usuarioRepository.buscarPorDocumentoIdentidad("10001111"))
                 .thenReturn(Mono.just(usuario1));
-            when(usuarioRepository.buscarPorDocumentoIdentidad("DOC002"))
+            when(usuarioRepository.buscarPorDocumentoIdentidad("10002222"))
                 .thenReturn(Mono.just(usuario2));
-            when(usuarioRepository.buscarPorDocumentoIdentidad("DOCEMPTY"))
+            when(usuarioRepository.buscarPorDocumentoIdentidad("99999999"))
                 .thenReturn(Mono.empty());
 
-            StepVerifier.create(consultarUsuarioUseCase.consultarPorDocumentoIdentidad("DOC001"))
+            StepVerifier.create(consultarUsuarioUseCase.consultarPorDocumentoIdentidad("10001111"))
                 .expectNext(usuario1)
                 .verifyComplete();
 
-            StepVerifier.create(consultarUsuarioUseCase.consultarPorDocumentoIdentidad("DOC002"))
+            StepVerifier.create(consultarUsuarioUseCase.consultarPorDocumentoIdentidad("10002222"))
                 .expectNext(usuario2)
                 .verifyComplete();
 
-            StepVerifier.create(consultarUsuarioUseCase.consultarPorDocumentoIdentidad("DOCEMPTY"))
+            StepVerifier.create(consultarUsuarioUseCase.consultarPorDocumentoIdentidad("99999999"))
                 .verifyComplete();
         }
     }

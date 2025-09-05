@@ -2,6 +2,7 @@ package co.com.crediya.usecase;
 
 import co.com.crediya.model.Usuario;
 import co.com.crediya.model.exceptions.BusinessException;
+import co.com.crediya.model.gateways.PasswordService;
 import co.com.crediya.model.gateways.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +24,9 @@ class RegistrarUsuarioUseCaseTest {
     @Mock
     private UsuarioRepository usuarioRepository;
     
+    @Mock
+    private PasswordService passwordService;
+    
     private RegistrarUsuarioUseCase registrarUsuarioUseCase;
     
     private static final String NOMBRES_VALIDOS = "Juan Carlos";
@@ -37,7 +41,11 @@ class RegistrarUsuarioUseCaseTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        registrarUsuarioUseCase = new RegistrarUsuarioUseCase(usuarioRepository);
+        registrarUsuarioUseCase = new RegistrarUsuarioUseCase(usuarioRepository, passwordService);
+        
+        // Setup common password service behavior
+        when(passwordService.generateRandomPassword()).thenReturn("randomPassword123");
+        when(passwordService.encryptPassword("randomPassword123")).thenReturn("encryptedPassword");
     }
 
     @Nested
@@ -51,7 +59,7 @@ class RegistrarUsuarioUseCaseTest {
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
                 .thenReturn(Mono.just(false));
-            when(usuarioRepository.registrarUsuario(any(Usuario.class), anyString(), anyString(), anyString(), anyLong()))
+            when(usuarioRepository.registrarUsuario(any(Usuario.class), anyString(), anyString(), anyString(), anyLong(), anyString()))
                 .thenReturn(Mono.empty());
 
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
@@ -62,7 +70,7 @@ class RegistrarUsuarioUseCaseTest {
             verify(usuarioRepository).existeEmail(CORREO_VALIDO);
             verify(usuarioRepository).existeDocumentoIdentidad(DOCUMENTO_VALIDO);
             verify(usuarioRepository).registrarUsuario(any(Usuario.class), eq(DOCUMENTO_VALIDO), 
-                eq(FECHA_NACIMIENTO_VALIDA), eq(TELEFONO_VALIDO), eq(ID_ROL_VALIDO));
+                eq(FECHA_NACIMIENTO_VALIDA), eq(TELEFONO_VALIDO), eq(ID_ROL_VALIDO), eq("encryptedPassword"));
         }
 
         @Test
@@ -73,7 +81,7 @@ class RegistrarUsuarioUseCaseTest {
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(anyString()))
                 .thenReturn(Mono.just(false));
-            when(usuarioRepository.registrarUsuario(any(Usuario.class), anyString(), anyString(), anyString(), anyLong()))
+            when(usuarioRepository.registrarUsuario(any(Usuario.class), anyString(), anyString(), anyString(), anyLong(), anyString()))
                 .thenReturn(Mono.empty());
 
             String nombres = "María Elena";
@@ -91,7 +99,7 @@ class RegistrarUsuarioUseCaseTest {
                 usuario.getApellidos().equals(apellidos) &&
                 usuario.getCorreoElectronico().equals(correo) &&
                 usuario.getSalarioBase().equals(salario)
-            ), eq(DOCUMENTO_VALIDO), eq(FECHA_NACIMIENTO_VALIDA), eq(TELEFONO_VALIDO), eq(ID_ROL_VALIDO));
+            ), eq(DOCUMENTO_VALIDO), eq(FECHA_NACIMIENTO_VALIDA), eq(TELEFONO_VALIDO), eq(ID_ROL_VALIDO), eq("encryptedPassword"));
         }
     }
 
@@ -105,6 +113,8 @@ class RegistrarUsuarioUseCaseTest {
 
             when(usuarioRepository.existeEmail(CORREO_VALIDO))
                 .thenReturn(Mono.just(true));
+            when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
+                .thenReturn(Mono.just(false));
 
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CORREO_VALIDO, SALARIO_VALIDO,
@@ -112,8 +122,9 @@ class RegistrarUsuarioUseCaseTest {
                 .expectError(BusinessException.class)
                 .verify();
 
-            verify(usuarioRepository, never()).existeDocumentoIdentidad(anyString());
-            verify(usuarioRepository, never()).registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong());
+            verify(usuarioRepository).existeEmail(CORREO_VALIDO);
+            verify(usuarioRepository).existeDocumentoIdentidad(DOCUMENTO_VALIDO);
+            verify(usuarioRepository, never()).registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong(), anyString());
         }
 
         @ParameterizedTest
@@ -127,12 +138,16 @@ class RegistrarUsuarioUseCaseTest {
 
             when(usuarioRepository.existeEmail(emailExistente))
                 .thenReturn(Mono.just(true));
+            when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
+                .thenReturn(Mono.just(false));
 
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, emailExistente, SALARIO_VALIDO,
                     DOCUMENTO_VALIDO, FECHA_NACIMIENTO_VALIDA, TELEFONO_VALIDO, ID_ROL_VALIDO))
                 .expectError(BusinessException.class)
                 .verify();
+                
+            verify(usuarioRepository).existeEmail(emailExistente);
         }
 
         @Test
@@ -142,6 +157,8 @@ class RegistrarUsuarioUseCaseTest {
             String emailDuplicado = "duplicado@test.com";
             when(usuarioRepository.existeEmail(emailDuplicado))
                 .thenReturn(Mono.just(true));
+            when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
+                .thenReturn(Mono.just(false));
 
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
                     NOMBRES_VALIDOS, APELLIDOS_VALIDOS, emailDuplicado, SALARIO_VALIDO,
@@ -150,6 +167,8 @@ class RegistrarUsuarioUseCaseTest {
                     error instanceof BusinessException &&
                     error.getMessage().contains(emailDuplicado))
                 .verify();
+                
+            verify(usuarioRepository).existeEmail(emailDuplicado);
         }
     }
 
@@ -172,7 +191,7 @@ class RegistrarUsuarioUseCaseTest {
                 .expectError(BusinessException.class)
                 .verify();
 
-            verify(usuarioRepository, never()).registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong());
+            verify(usuarioRepository, never()).registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong(), anyString());
         }
 
         @ParameterizedTest
@@ -314,7 +333,7 @@ class RegistrarUsuarioUseCaseTest {
             when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
                 .thenReturn(Mono.just(false));
             RuntimeException repositoryError = new RuntimeException("Insert failed");
-            when(usuarioRepository.registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong()))
+            when(usuarioRepository.registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong(), anyString()))
                 .thenReturn(Mono.error(repositoryError));
 
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
@@ -337,7 +356,7 @@ class RegistrarUsuarioUseCaseTest {
                 .thenReturn(Mono.just(false));
             when(usuarioRepository.existeDocumentoIdentidad(DOCUMENTO_VALIDO))
                 .thenReturn(Mono.just(false));
-            when(usuarioRepository.registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong()))
+            when(usuarioRepository.registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong(), anyString()))
                 .thenReturn(Mono.empty());
 
             StepVerifier.create(registrarUsuarioUseCase.registrarUsuario(
@@ -348,7 +367,7 @@ class RegistrarUsuarioUseCaseTest {
             var inOrder = inOrder(usuarioRepository);
             inOrder.verify(usuarioRepository).existeEmail(CORREO_VALIDO);
             inOrder.verify(usuarioRepository).existeDocumentoIdentidad(DOCUMENTO_VALIDO);
-            inOrder.verify(usuarioRepository).registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong());
+            inOrder.verify(usuarioRepository).registrarUsuario(any(), anyString(), anyString(), anyString(), anyLong(), anyString());
         }
 
         @Test

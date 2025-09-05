@@ -42,4 +42,7 @@ public class UsuarioEntity {
 
     @Column("salario_base")
     private Integer salarioBase;
+    
+    @Column("password")
+    private String password;
 }

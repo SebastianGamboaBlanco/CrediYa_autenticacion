@@ -98,8 +98,7 @@ jacoco {
 
 tasks.register('jacocoMergedReport', JacocoReport) {
     dependsOn = [test, project(':usecase').jacocoTestReport, pitestReportAggregate]
-    
-    // Solo incluir el módulo usecase
+
     def usecaseProject = project(':usecase')
     additionalSourceDirs.setFrom files(usecaseProject.sourceSets.main.allSource.srcDirs)
     sourceDirectories.setFrom files(usecaseProject.sourceSets.main.allSource.srcDirs)
