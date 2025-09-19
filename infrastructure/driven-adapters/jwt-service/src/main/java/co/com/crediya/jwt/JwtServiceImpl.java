@@ -32,7 +32,7 @@ public class JwtServiceImpl implements JwtTokenService {
     public Mono<JwtToken> generateToken(TokenClaims claims) {
         return Mono.fromCallable(() -> {
             String token = Jwts.builder()
-                    .setSubject(claims.getSubject())
+                    .setSubject(claims.getDocument())
                     .claim("email", claims.getEmail())
                     .claim("roleId", claims.getRole().getId())
                     .claim("roleName", claims.getRole().getName())
@@ -57,7 +57,7 @@ public class JwtServiceImpl implements JwtTokenService {
             );
 
             return TokenClaims.builder()
-                    .subject(claims.getSubject())
+                    .document(claims.getSubject())
                     .email(claims.get("email", String.class))
                     .role(role)
                     .issuedAt(claims.getIssuedAt().toInstant())

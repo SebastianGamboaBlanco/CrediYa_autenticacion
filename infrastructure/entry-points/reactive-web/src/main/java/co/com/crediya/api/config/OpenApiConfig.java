@@ -16,19 +16,19 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("CrediYa - API de Autenticación")
-                        .description("API REST para el manejo de usuarios y autenticación en el sistema CrediYa")
+                        .title("CrediYa - API the Authentication")
+                        .description("REST API for user management and authentication in the CrediYa system")
                         .version("1.0.0")
                         .contact(new Contact()
-                                .name("Equipo CrediYa")
+                                .name("CrediYa Team")
                                 .email("soporte@crediya.com")))
                 .servers(List.of(
                         new Server()
                                 .url("http://localhost:8080")
-                                .description("Servidor de desarrollo"),
+                                .description("Development server"),
                         new Server()
                                 .url("https://api.crediya.com")
-                                .description("Servidor de producción")
+                                .description("Production server")
                 ));
     }
 }

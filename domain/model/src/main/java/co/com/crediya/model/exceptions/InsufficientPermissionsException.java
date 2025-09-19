@@ -20,18 +20,10 @@ public class InsufficientPermissionsException extends RuntimeException {
         this.userId = null;
     }
 
-    public static InsufficientPermissionsException adminRequired(String userId, String currentRole) {
-        return new InsufficientPermissionsException(
-            "Permisos insuficientes: se requiere rol de administrador",
-            "ADMIN",
-            currentRole,
-            userId
-        );
-    }
 
     public static InsufficientPermissionsException registrationPermissionRequired(String userId, String currentRole) {
         return new InsufficientPermissionsException(
-            "Permisos insuficientes: se requiere rol ADMIN o ASESOR para registro de usuarios",
+            "insufficient permissions: Required role ADMIN o ASESOR for register of user",
             "ADMIN o ASESOR", 
             currentRole,
             userId

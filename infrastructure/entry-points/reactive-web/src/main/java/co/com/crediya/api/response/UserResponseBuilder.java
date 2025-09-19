@@ -1,0 +1,18 @@
+package co.com.crediya.api.response;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+
+@Component
+public class UserResponseBuilder {
+
+    public Mono<ServerResponse> buildResponse(HttpStatus status, Object body) {
+        return ServerResponse.status(status)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(body);
+    }
+
+}

@@ -18,8 +18,8 @@ public class RolEntity {
     private Long id;
 
     @Column("nombre")
-    private String nombre;
+    private String name;
 
     @Column("descripcion")
-    private String descripcion;
+    private String description;
 }

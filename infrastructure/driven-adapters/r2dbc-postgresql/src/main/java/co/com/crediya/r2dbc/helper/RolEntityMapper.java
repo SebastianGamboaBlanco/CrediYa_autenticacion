@@ -14,7 +14,7 @@ public class RolEntityMapper {
         
         return Role.of(
             rolEntity.getId(),
-            rolEntity.getNombre()
+            rolEntity.getName()
         );
     }
 
@@ -25,7 +25,7 @@ public class RolEntityMapper {
         
         return RolEntity.builder()
                 .id(role.getId())
-                .nombre(role.getName())
+                .name(role.getName())
                 .build();
     }
 }

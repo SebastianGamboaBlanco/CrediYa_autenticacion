@@ -1,12 +1,12 @@
 package co.com.crediya.config;
 
-import co.com.crediya.model.gateways.AutenticacionRepository;
+import co.com.crediya.model.gateways.AuthenticationRepository;
 import co.com.crediya.model.gateways.JwtTokenService;
 import co.com.crediya.model.gateways.PasswordService;
-import co.com.crediya.usecase.AutenticacionUseCase;
-import co.com.crediya.usecase.RegistrarUsuarioUseCase;
-import co.com.crediya.usecase.ConsultarUsuarioUseCase;
-import co.com.crediya.model.gateways.UsuarioRepository;
+import co.com.crediya.usecase.AuthenticationUseCase;
+import co.com.crediya.usecase.RegisterUserUseCase;
+import co.com.crediya.usecase.GetUserUseCase;
+import co.com.crediya.model.gateways.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -21,17 +21,17 @@ import org.springframework.context.annotation.FilterType;
 public class UseCasesConfig {
 
     @Bean  
-    public RegistrarUsuarioUseCase registrarUsuarioUseCase(UsuarioRepository usuarioRepository, PasswordService passwordService) {
-        return new RegistrarUsuarioUseCase(usuarioRepository, passwordService);
+    public RegisterUserUseCase registerUserUseCase(UserRepository userRepository, PasswordService passwordService) {
+        return new RegisterUserUseCase(userRepository, passwordService);
     }
 
     @Bean
-    public ConsultarUsuarioUseCase consultarUsuarioUseCase(UsuarioRepository usuarioRepository) {
-        return new ConsultarUsuarioUseCase(usuarioRepository);
+    public GetUserUseCase getUserUseCase(UserRepository userRepository) {
+        return new GetUserUseCase(userRepository);
     }
 
     @Bean
-    public AutenticacionUseCase autenticacionUseCase(AutenticacionRepository autenticacionRepository, JwtTokenService jwtTokenService) {
-        return new AutenticacionUseCase(autenticacionRepository, jwtTokenService);
+    public AuthenticationUseCase authenticationUseCase(AuthenticationRepository authenticationRepository, JwtTokenService jwtTokenService) {
+        return new AuthenticationUseCase(authenticationRepository, jwtTokenService);
     }
 }

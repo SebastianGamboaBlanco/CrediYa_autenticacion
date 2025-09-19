@@ -19,9 +19,9 @@ public class LoginResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer code;
 
-    @JsonProperty("mensaje")
+    @JsonProperty("message")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String mensaje;
+    private String message;
 
     @JsonProperty("accessToken")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -38,7 +38,7 @@ public class LoginResponse {
     public static LoginResponse success(String token, Instant expiresAt, Long roleId, String roleName) {
         return LoginResponse.builder()
                 .code(0)
-                .mensaje("Login exitoso")
+                .message("Login success")
                 .accessToken(token)
                 .expiresAt(expiresAt)
                 .role(RoleInfo.builder()
@@ -48,10 +48,10 @@ public class LoginResponse {
                 .build();
     }
 
-    public static LoginResponse error(String mensaje) {
+    public static LoginResponse error(String message) {
         return LoginResponse.builder()
                 .code(1)
-                .mensaje(mensaje)
+                .message(message)
                 .build();
     }
 }

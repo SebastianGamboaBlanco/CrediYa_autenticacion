@@ -1,7 +1,7 @@
 package co.com.crediya.api.security;
 
 import co.com.crediya.model.valueobjects.JwtToken;
-import co.com.crediya.usecase.AutenticacionUseCase;
+import co.com.crediya.usecase.AuthenticationUseCase;
 import co.com.crediya.model.valueobjects.TokenClaims;
 import co.com.crediya.api.exception.ErrorHandler;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +20,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter implements WebFilter {
 
-    private final AutenticacionUseCase authenticationUseCase;
+    private final AuthenticationUseCase authenticationUseCase;
     private final ErrorHandler errorHandler;
     
     private static final List<String> EXCLUDED_PATHS = List.of(
         "/api/v1/login",
+        "/api/v1/auth/validate",
+        "/api/v1/users/{documentIdentity}",
+        "/api/v1/email/{email}",
         "/actuator",
         "/swagger-ui",
         "/v3/api-docs",
@@ -42,7 +45,7 @@ public class JwtAuthenticationFilter implements WebFilter {
         return extractTokenFromRequest(exchange)
                 .flatMap(this::validateToken)
                 .flatMap(claims -> {
-                    exchange.getAttributes().put("user.id", claims.getSubject());
+                    exchange.getAttributes().put("user.id", claims.getDocument());
                     exchange.getAttributes().put("user.email", claims.getEmail());
                     exchange.getAttributes().put("user.role", claims.getRole());
                     return chain.filter(exchange);
@@ -51,7 +54,13 @@ public class JwtAuthenticationFilter implements WebFilter {
     }
 
     private boolean shouldSkipAuthentication(String path) {
-        return EXCLUDED_PATHS.stream().anyMatch(path::startsWith);
+        return EXCLUDED_PATHS.stream().anyMatch(excludedPath -> {
+            if (excludedPath.contains("{")) {
+                String basePattern = excludedPath.substring(0, excludedPath.indexOf("{"));
+                return path.startsWith(basePattern);
+            }
+            return path.startsWith(excludedPath);
+        });
     }
 
     private Mono<JwtToken> extractTokenFromRequest(ServerWebExchange exchange) {
@@ -59,7 +68,7 @@ public class JwtAuthenticationFilter implements WebFilter {
             String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
             
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new RuntimeException("Token JWT no encontrado o formato inválido");
+                throw new RuntimeException("JWT token not found or invalid format");
             }
             
             String token = authHeader.substring(7);
@@ -71,7 +80,7 @@ public class JwtAuthenticationFilter implements WebFilter {
         return authenticationUseCase.validateToken(token)
                 .flatMap(isValid -> {
                     if (!isValid) {
-                        return Mono.error(new RuntimeException("Token JWT inválido o expirado"));
+                        return Mono.error(new RuntimeException("JWT token invalid or expired"));
                     }
                     return authenticationUseCase.extractClaims(token);
                 });

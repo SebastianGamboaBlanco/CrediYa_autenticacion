@@ -10,14 +10,14 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Error específico de un campo")
+@Schema(description = "Specific field error")
 public class FieldError {
-    @Schema(description = "Nombre del campo", example = "correoElectronico")
-    private String campo;
+    @Schema(description = "Field name", example = "email")
+    private String field;
     
-    @Schema(description = "Mensaje de error", example = "El correo electrónico es requerido")
-    private String mensaje;
+    @Schema(description = "Error message", example = "Email is required")
+    private String message;
     
-    @Schema(description = "Valor rechazado", example = "correo-invalido")
-    private Object valorRechazado;
+    @Schema(description = "Rejected value", example = "invalid-email")
+    private Object rejectedValue;
 }

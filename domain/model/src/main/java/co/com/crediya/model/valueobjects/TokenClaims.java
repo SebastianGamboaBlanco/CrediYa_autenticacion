@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.Objects;
 
 public class TokenClaims {
-    private final String subject;
+    private final String document;
     private final String email;
     private final Role role;
     private final Instant issuedAt;
@@ -12,7 +12,7 @@ public class TokenClaims {
     private final String issuer;
 
     private TokenClaims(Builder builder) {
-        this.subject = builder.subject;
+        this.document = builder.document;
         this.email = builder.email;
         this.role = builder.role;
         this.issuedAt = builder.issuedAt;
@@ -24,8 +24,8 @@ public class TokenClaims {
         return new Builder();
     }
 
-    public String getSubject() {
-        return subject;
+    public String getDocument() {
+        return document;
     }
 
     public String getEmail() {
@@ -53,8 +53,8 @@ public class TokenClaims {
     }
 
     public boolean isValid() {
-        return !isExpired() && 
-               subject != null && !subject.trim().isEmpty() &&
+        return !isExpired() &&
+                document != null && !document.trim().isEmpty() &&
                email != null && !email.trim().isEmpty() &&
                role != null;
     }
@@ -64,20 +64,20 @@ public class TokenClaims {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TokenClaims that = (TokenClaims) o;
-        return Objects.equals(subject, that.subject) &&
+        return Objects.equals(document, that.document) &&
                Objects.equals(email, that.email) &&
                Objects.equals(role, that.role);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(subject, email, role);
+        return Objects.hash(document, email, role);
     }
 
     @Override
     public String toString() {
         return "TokenClaims{" +
-               "subject='" + subject + '\'' +
+               "subject='" + document + '\'' +
                ", email='" + email + '\'' +
                ", role=" + role +
                ", issuedAt=" + issuedAt +
@@ -86,7 +86,7 @@ public class TokenClaims {
     }
 
     public static class Builder {
-        private String subject;
+        private String document;
         private String email;
         private Role role;
         private Instant issuedAt;
@@ -97,8 +97,8 @@ public class TokenClaims {
             this.issuedAt = Instant.now();
         }
 
-        public Builder subject(String subject) {
-            this.subject = subject;
+        public Builder document(String document) {
+            this.document = document;
             return this;
         }
 
@@ -128,8 +128,8 @@ public class TokenClaims {
         }
 
         public TokenClaims build() {
-            if (subject == null || subject.trim().isEmpty()) {
-                throw new IllegalArgumentException("Subject cannot be null or empty");
+            if (document == null || document.trim().isEmpty()) {
+                throw new IllegalArgumentException("Document cannot be null or empty");
             }
             if (email == null || email.trim().isEmpty()) {
                 throw new IllegalArgumentException("Email cannot be null or empty");

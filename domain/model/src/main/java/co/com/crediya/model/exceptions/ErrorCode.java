@@ -2,25 +2,26 @@ package co.com.crediya.model.exceptions;
 
 public enum ErrorCode {
 
-    NOMBRE_REQUIRED("nombres", ErrorType.VALIDATION, "El nombre es requerido y no puede estar vacío"),
-    APELLIDO_REQUIRED("apellidos", ErrorType.VALIDATION, "Los apellidos son requeridos y no pueden estar vacíos"),
-    CORREO_REQUIRED("correoElectronico", ErrorType.VALIDATION, "El correo electrónico es requerido"),
-    SALARIO_REQUIRED("salarioBase", ErrorType.VALIDATION, "El salario base es requerido"),
-    ROL_INVALID("idRol", ErrorType.VALIDATION, "El rol especificado no es válido"),
+    FIRST_NAME_REQUIRED("firstName", ErrorType.VALIDATION, "First name is required and cannot be empty"),
+    LAST_NAME_REQUIRED("lastName", ErrorType.VALIDATION, "Last name is required and cannot be empty"),
+    EMAIL_REQUIRED("email", ErrorType.VALIDATION, "Email is required"),
+    SALARY_REQUIRED("baseSalary", ErrorType.VALIDATION, "Base salary is required"),
+    ROLE_INVALID("roleId", ErrorType.VALIDATION, "The specified role is not valid"),
     
 
-    CORREO_FORMAT_INVALID("correoElectronico", ErrorType.FORMAT, "El formato del correo '%s' no es válido"),
-    DOCUMENTO_FORMAT_INVALID("documentoIdentidad", ErrorType.FORMAT, "El documento '%s' debe contener entre 4 y 20 dígitos"),
+    EMAIL_FORMAT_INVALID("email", ErrorType.FORMAT, "Email format '%s' is not valid"),
+    DOCUMENT_FORMAT_INVALID("documentIdentity", ErrorType.FORMAT, "Document '%s' must contain between 4 and 20 digits"),
     
 
-    CORREO_ALREADY_EXISTS("correoElectronico", ErrorType.ALREADY_EXISTS, "Ya existe un usuario registrado con el correo '%s'"),
-    DOCUMENTO_ALREADY_EXISTS("documentoIdentidad", ErrorType.ALREADY_EXISTS, "Ya existe un usuario registrado con el documento '%s'"),
+    EMAIL_ALREADY_EXISTS("email", ErrorType.ALREADY_EXISTS, "A user is already registered with email '%s'"),
+    DOCUMENT_ALREADY_EXISTS("documentIdentity", ErrorType.ALREADY_EXISTS, "A user is already registered with document '%s'"),
     
 
-    SALARIO_OUT_OF_RANGE("salarioBase", ErrorType.OUT_OF_RANGE, "El salario debe estar entre %d y %d"),
+    SALARY_OUT_OF_RANGE("baseSalary", ErrorType.OUT_OF_RANGE, "Salary must be between %d and %d"),
 
-    CORREO_NOT_EXISTS("email", ErrorType.VALIDATION,"Correo electronico no existe"),
-    PASSWORD_INVALID("password",ErrorType.VALIDATION,"Contraseña invalida");
+    EMAIL_NOT_EXISTS("email", ErrorType.VALIDATION, "Email does not exist"),
+    INVALID_PASSWORD("password", ErrorType.VALIDATION, "Invalid password");
+    
     private final String field;
     private final ErrorType type;
     private final String messageTemplate;

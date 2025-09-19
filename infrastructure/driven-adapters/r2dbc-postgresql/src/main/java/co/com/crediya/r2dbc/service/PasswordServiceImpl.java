@@ -33,7 +33,7 @@ public class PasswordServiceImpl implements PasswordService {
         
         String generatedPassword = password.toString();
         //SOLO PARA FINES DE PRUEBAS
-        log.info("Password generado para usuario: {}", generatedPassword);
+        log.info("Generate password for user: {}", generatedPassword);
         
         return generatedPassword;
     }

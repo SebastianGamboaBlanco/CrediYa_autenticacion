@@ -23,12 +23,12 @@ public final class RoleValidator {
             Role userRole = (Role) exchange.getAttribute("user.role");
             
             if (userRole == null) {
-                log.warn("No se encontró información de rol en el contexto para registro de usuarios");
+                log.warn("Role information not found in context for user registration");
                 return false;
             }
             
             boolean hasPermission = REGISTRATION_ALLOWED_ROLE_IDS.contains(userRole.getId());
-            log.debug("Validación de permisos de registro - Usuario: {}, Rol ID: {}, Rol: {}, Permitido: {}", 
+            log.debug("Registration permission validation - User: {}, Role ID: {}, Role: {}, Allowed: {}", 
                      exchange.getAttribute("user.id"), userRole.getId(), userRole.getName(), hasPermission);
             
             return hasPermission;
@@ -39,7 +39,7 @@ public final class RoleValidator {
                 Role userRole = (Role) exchange.getAttribute("user.role");
                 String currentRole = userRole != null ? userRole.getName() : "UNKNOWN";
                 
-                log.warn("Acceso denegado para registro - Usuario ID: {}, Rol actual: {}", userId, currentRole);
+                log.warn("Access denied for registration - User ID: {}, Current role: {}", userId, currentRole);
                 return Mono.error(InsufficientPermissionsException.registrationPermissionRequired(userId, currentRole));
             }
             return Mono.empty();

@@ -3,7 +3,7 @@ package co.com.crediya.api.helper;
 import co.com.crediya.model.exceptions.BusinessException;
 import co.com.crediya.model.exceptions.ErrorCode;
 import co.com.crediya.model.exceptions.MultipleValidationException;
-import co.com.crediya.model.gateways.RolRepository;
+import co.com.crediya.model.gateways.RoleRepository;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +24,12 @@ import java.util.stream.Collectors;
 public class ValidationUtils {
     
     private final Validator validator;
-    private final RolRepository rolRepository;
+    private final RoleRepository roleRepository;
 
 
 
     public <T> Mono<T> validateRequest(T object) {
-        log.debug("Iniciando validación Bean Validation para objeto: {}", object.getClass().getSimpleName());
+        log.debug("Starting Bean Validation for object: {}", object.getClass().getSimpleName());
         
         Set<ConstraintViolation<T>> violations = validator.validate(object);
         
@@ -39,67 +39,67 @@ public class ValidationUtils {
                 .map(violation -> {
                     try {
                         String campo = Objects.isNull(violation.getPropertyPath()) ? "unknown": violation.getPropertyPath().toString() ;
-                        String mensaje = Objects.isNull(violation.getMessage()) ? "Error de validación" : violation.getMessage();
+                        String mensaje = Objects.isNull(violation.getMessage()) ? "Validation error" : violation.getMessage();
                         String valor = Objects.isNull(violation.getInvalidValue()) ? "" : violation.getInvalidValue().toString();
                         
-                        log.debug("Creando tupla - Campo: '{}', Mensaje: '{}', Valor: '{}'", campo, mensaje, valor);
+                        log.debug("Creating tuple - Field: '{}', Message: '{}', Value: '{}'", campo, mensaje, valor);
                         return Tuples.of(campo, mensaje, valor);
                     } catch (Exception e) {
-                        log.error("Error completo procesando violation: {}", e.getMessage(), e);
-                        return Tuples.of("error", "Error procesando validación", "");
+                        log.error("Complete error processing violation: {}", e.getMessage(), e);
+                        return Tuples.of("error", "Error processing validation", "");
                     }
                 })
                 .collect(Collectors.toList());
             
-            log.warn("Validación fallida - Objeto: {}, Número de errores: {}", 
+            log.warn("Validation failed - Object: {}, Number of errors: {}", 
                 object.getClass().getSimpleName(), errors.size());
                 
             return Mono.error(new MultipleValidationException(errors));
         }
         
-        log.debug("Validación Bean Validation exitosa para: {}", object.getClass().getSimpleName());
+        log.debug("Bean Validation successful for: {}", object.getClass().getSimpleName());
         return Mono.just(object);
     }
 
 
     public void validateDocumentoIdentidadOrThrow(String documentoIdentidad) {
         if (documentoIdentidad == null || documentoIdentidad.trim().isEmpty()) {
-            log.warn("Documento de identidad nulo o vacío");
-            throw new BusinessException(ErrorCode.DOCUMENTO_FORMAT_INVALID, documentoIdentidad);
+            log.warn("Identity document null or empty");
+            throw new BusinessException(ErrorCode.DOCUMENT_FORMAT_INVALID, documentoIdentidad);
         }
         
         if (!documentoIdentidad.matches("\\d{4,20}")) {
-            log.warn("Formato de documento inválido: {} - Debe contener entre 4 y 20 dígitos", documentoIdentidad);
-            throw new BusinessException(ErrorCode.DOCUMENTO_FORMAT_INVALID, documentoIdentidad);
+            log.warn("Invalid document format: {} - Must contain between 4 and 20 digits", documentoIdentidad);
+            throw new BusinessException(ErrorCode.DOCUMENT_FORMAT_INVALID, documentoIdentidad);
         }
         
-        log.debug("Documento de identidad válido: {}", documentoIdentidad);
+        log.debug("Valid identity document: {}", documentoIdentidad);
     }
 
 
     public Mono<Void> validateRolOrThrow(Long idRol) {
         if (idRol == null) {
-            log.warn("ID de rol nulo");
-            return Mono.error(new BusinessException(ErrorCode.ROL_INVALID, String.valueOf(idRol)));
+            log.warn("Role ID null");
+            return Mono.error(new BusinessException(ErrorCode.ROLE_INVALID, String.valueOf(idRol)));
         }
         
-        log.debug("Validando existencia de rol con ID: {}", idRol);
+        log.debug("Validating role existence with ID: {}", idRol);
         
-        return rolRepository.existeRol(idRol)
+        return roleRepository.roleExists(idRol)
             .flatMap(existe -> {
                 if (!existe) {
-                    log.warn("Rol con ID {} no existe en la base de datos", idRol);
-                    return Mono.error(new BusinessException(ErrorCode.ROL_INVALID, String.valueOf(idRol)));
+                    log.warn("Role with ID {} does not exist in database", idRol);
+                    return Mono.error(new BusinessException(ErrorCode.ROLE_INVALID, String.valueOf(idRol)));
                 }
-                log.debug("Rol con ID {} validado exitosamente", idRol);
+                log.debug("Role with ID {} validated successfully", idRol);
                 return Mono.empty();
             })
             .onErrorMap(error -> {
                 if (error instanceof BusinessException) {
                     return error;
                 }
-                log.error("Error consultando existencia de rol con ID {}: {}", idRol, error.getMessage(), error);
-                return new BusinessException(ErrorCode.ROL_INVALID, String.valueOf(idRol));
+                log.error("Error querying role existence with ID {}: {}", idRol, error.getMessage(), error);
+                return new BusinessException(ErrorCode.ROLE_INVALID, String.valueOf(idRol));
             })
             .then();
     }

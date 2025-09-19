@@ -15,16 +15,16 @@ import java.util.stream.Collectors;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Respuesta con múltiples errores de validación")
+@Schema(description = "Response with multiple validation errors")
 public class ValidationErrorResponse {
     
-    @Schema(description = "Código de respuesta: 0=éxito, 1=error", example = "1")
+    @Schema(description = "Response code: 0=success, 1=error", example = "1")
     private int code;
     
-    @Schema(description = "Lista de errores específicos")
-    private List<FieldError> errores;
+    @Schema(description = "List of specific errors")
+    private List<FieldError> errors;
     
-    @Schema(description = "ID de trazabilidad para seguimiento de errores", example = "abc123-def456")
+    @Schema(description = "Traceability ID for error tracking", example = "abc123-def456")
     private String trace;
     
     public static ValidationErrorResponse from(List<Tuple3<String, String, String>> validationErrors) {

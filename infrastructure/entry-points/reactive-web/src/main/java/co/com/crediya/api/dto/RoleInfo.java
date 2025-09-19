@@ -16,7 +16,7 @@ public class RoleInfo {
     @JsonProperty("id")
     private Long id;
     
-    @JsonProperty("nombre")
+    @JsonProperty("name")
     private String name;
     
     public static RoleInfo from(Role role) {

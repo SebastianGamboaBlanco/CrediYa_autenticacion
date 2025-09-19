@@ -15,21 +15,21 @@ public class AuthErrorResponse {
     @JsonProperty("code")
     private Integer code;
 
-    @JsonProperty("mensaje")
-    private String mensaje;
+    @JsonProperty("message")
+    private String message;
 
-    public static AuthErrorResponse unauthorized(String mensaje) {
+    public static AuthErrorResponse unauthorized(String message) {
         return AuthErrorResponse.builder()
                 .code(1)
-                .mensaje(mensaje)
+                .message(message)
                 .build();
     }
 
     public static AuthErrorResponse tokenRequired() {
-        return unauthorized("Token de acceso requerido");
+        return unauthorized("Access token required");
     }
 
     public static AuthErrorResponse tokenInvalid() {
-        return unauthorized("Token JWT inválido o expirado");
+        return unauthorized("Token JWT invalid o expired");
     }
 }

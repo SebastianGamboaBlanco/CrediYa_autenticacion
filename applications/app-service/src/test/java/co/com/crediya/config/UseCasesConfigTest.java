@@ -1,6 +1,11 @@
 package co.com.crediya.config;
 
+import co.com.crediya.model.gateways.AuthenticationRepository;
+import co.com.crediya.model.gateways.JwtTokenService;
+import co.com.crediya.model.gateways.PasswordService;
+import co.com.crediya.model.gateways.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +38,26 @@ public class UseCasesConfigTest {
         @Bean
         public MyUseCase myUseCase() {
             return new MyUseCase();
+        }
+
+        @Bean
+        public UserRepository userRepository() {
+            return Mockito.mock(UserRepository.class);
+        }
+
+        @Bean
+        public PasswordService passwordService() {
+            return Mockito.mock(PasswordService.class);
+        }
+
+        @Bean
+        public AuthenticationRepository authenticationRepository() {
+            return Mockito.mock(AuthenticationRepository.class);
+        }
+
+        @Bean
+        public JwtTokenService jwtTokenService() {
+            return Mockito.mock(JwtTokenService.class);
         }
     }
 

@@ -16,81 +16,83 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import co.com.crediya.api.dto.UsuarioRequest;
-import co.com.crediya.api.dto.UsuarioResponse;
-import co.com.crediya.api.dto.UsuarioConsultaResponse;
+import co.com.crediya.api.dto.UserRequest;
+import co.com.crediya.api.dto.UserResponse;
+import co.com.crediya.api.dto.UserQueryResponse;
 import co.com.crediya.api.dto.LoginRequest;
 import co.com.crediya.api.dto.LoginResponse;
+import co.com.crediya.api.dto.TokenValidationRequest;
+import co.com.crediya.api.dto.TokenValidationResponse;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
-@Tag(name = "Usuarios", description = "API para gestión de usuarios")
+@Tag(name = "Users", description = "API for user management")
 public class RouterRest {
     
     @Bean
     @RouterOperations({
         @RouterOperation(
-            path = "/api/v1/usuarios",
+            path = "/api/v1/users",
             method = RequestMethod.POST,
             beanClass = Handler.class,
-            beanMethod = "registrarUsuario",
+            beanMethod = "registerUser",
             operation = @Operation(
-                operationId = "registrarUsuario",
-                summary = "Registrar nuevo usuario",
-                description = "Registra un nuevo usuario en el sistema con validaciones de negocio",
-                tags = {"Usuarios"},
+                operationId = "registerUser",
+                summary = "Register new user",
+                description = "Registers a new user in the system with business validations",
+                tags = {"Users"},
                 requestBody = @RequestBody(
-                    description = "Datos del usuario a registrar",
+                    description = "User data to register",
                     required = true,
                     content = @Content(
                         mediaType = MediaType.APPLICATION_JSON_VALUE,
-                        schema = @Schema(implementation = UsuarioRequest.class)
+                        schema = @Schema(implementation = UserRequest.class)
                     )
                 ),
                 responses = {
                     @ApiResponse(
                         responseCode = "200",
-                        description = "Usuario registrado exitosamente",
+                        description = "User registered successfully",
                         content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UsuarioResponse.class),
+                            schema = @Schema(implementation = UserResponse.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                value = "{\"code\":\"0\",\"mensaje\":\"Usuario registrado exitosamente\"}"
+                                value = "{\"code\":\"0\",\"message\":\"User registered successfully\"}"
                             )
                         )
                     ),
                     @ApiResponse(
                         responseCode = "400",
-                        description = "Datos de entrada inválidos",
+                        description = "Invalid input data",
                         content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UsuarioResponse.class),
+                            schema = @Schema(implementation = UserResponse.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                value = "{\"code\":\"1\",\"mensaje\":\"El nombre es obligatorio\"}"
+                                value = "{\"code\":\"1\",\"message\":\"Name is required\"}"
                             )
                         )
                     ),
                     @ApiResponse(
                         responseCode = "409",
-                        description = "Usuario ya existe",
+                        description = "User already exists",
                         content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UsuarioResponse.class),
+                            schema = @Schema(implementation = UserResponse.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                value = "{\"code\":\"1\",\"mensaje\":\"El correo electrónico juan.perez@email.com ya se encuentra registrado\"}"
+                                value = "{\"code\":\"1\",\"message\":\"Email juan.perez@email.com is already registered\"}"
                             )
                         )
                     ),
                     @ApiResponse(
                         responseCode = "500",
-                        description = "Error interno del servidor",
+                        description = "Internal server error",
                         content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UsuarioResponse.class),
+                            schema = @Schema(implementation = UserResponse.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                value = "{\"code\":\"1\",\"mensaje\":\"Error interno del servidor\"}"
+                                value = "{\"code\":\"1\",\"message\":\"Internal server error\"}"
                             )
                         )
                     )
@@ -104,11 +106,11 @@ public class RouterRest {
                     beanMethod = "login",
                     operation = @Operation(
                             operationId = "login",
-                            summary = "Autenticar usuario",
-                            description = "Autentica un usuario con email y contraseña, retornando un token JWT",
-                            tags = {"Autenticación"},
+                            summary = "Authenticate user",
+                            description = "Authenticates a user with email and password, returning a JWT token",
+                            tags = {"Authentication"},
                             requestBody = @RequestBody(
-                                    description = "Credenciales de autenticación",
+                                    description = "Authentication credentials",
                                     required = true,
                                     content = @Content(
                                             mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -118,34 +120,89 @@ public class RouterRest {
                             responses = {
                                     @ApiResponse(
                                             responseCode = "200",
-                                            description = "Login exitoso",
+                                            description = "Successful login",
                                             content = @Content(
                                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                                                     schema = @Schema(implementation = LoginResponse.class),
                                                     examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                                            value = "{\"code\":\"0\",\"mensaje\":\"Login exitoso\",\"accessToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\"tokenType\":\"Bearer\",\"expiresAt\":\"2024-01-01T12:00:00Z\",\"role\":{\"id\":1,\"name\":\"ADMIN\"}}"
+                                                            value = "{\"code\":\"0\",\"message\":\"Successful login\",\"accessToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\"tokenType\":\"Bearer\",\"expiresAt\":\"2024-01-01T12:00:00Z\",\"role\":{\"id\":1,\"name\":\"ADMIN\"}}"
                                                     )
                                             )
                                     ),
                                     @ApiResponse(
                                             responseCode = "401",
-                                            description = "Credenciales inválidas",
+                                            description = "Invalid credentials",
                                             content = @Content(
                                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                                                     schema = @Schema(implementation = LoginResponse.class),
                                                     examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                                            value = "{\"code\":\"1\",\"mensaje\":\"Credenciales inválidas\"}"
+                                                            value = "{\"code\":\"1\",\"message\":\"Invalid credentials\"}"
                                                     )
                                             )
                                     ),
                                     @ApiResponse(
                                             responseCode = "400",
-                                            description = "Datos de entrada inválidos",
+                                            description = "Invalid input data",
                                             content = @Content(
                                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                                                     schema = @Schema(implementation = LoginResponse.class),
                                                     examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                                            value = "{\"code\":\"1\",\"mensaje\":\"El email es obligatorio\"}"
+                                                            value = "{\"code\":\"1\",\"message\":\"Email is required\"}"
+                                                    )
+                                            )
+                                    )
+                            }
+                    )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/auth/validate",
+                    method = RequestMethod.POST,
+                    beanClass = Handler.class,
+                    beanMethod = "validateToken",
+                    operation = @Operation(
+                            operationId = "validateToken",
+                            summary = "Validate JWT token",
+                            description = "Validates a JWT token and returns claims information if valid",
+                            tags = {"Authentication"},
+                            requestBody = @RequestBody(
+                                    description = "Token to validate",
+                                    required = true,
+                                    content = @Content(
+                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                            schema = @Schema(implementation = TokenValidationRequest.class)
+                                    )
+                            ),
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Token validated successfully",
+                                            content = @Content(
+                                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                    schema = @Schema(implementation = TokenValidationResponse.class),
+                                                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                                            value = "{\"code\":0,\"message\":\"Valid token\",\"valid\":true,\"subject\":\"123\",\"email\":\"user@example.com\",\"role\":{\"id\":1,\"name\":\"ADMIN\"},\"issuedAt\":\"2024-01-01T10:00:00Z\",\"expiresAt\":\"2024-01-01T11:00:00Z\",\"issuer\":\"crediya-auth-service\"}"
+                                                    )
+                                            )
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Invalid token",
+                                            content = @Content(
+                                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                    schema = @Schema(implementation = TokenValidationResponse.class),
+                                                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                                            value = "{\"code\":1,\"message\":\"Invalid or expired token\",\"valid\":false}"
+                                                    )
+                                            )
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "400",
+                                            description = "Invalid input data",
+                                            content = @Content(
+                                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                    schema = @Schema(implementation = TokenValidationResponse.class),
+                                                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                                            value = "{\"code\":1,\"message\":\"Token is required\",\"valid\":false}"
                                                     )
                                             )
                                     )
@@ -153,19 +210,19 @@ public class RouterRest {
                     )
             ),
         @RouterOperation(
-            path = "/api/v1/usuarios/{documentoIdentidad}",
+            path = "/api/v1/users/{documentIdentity}",
             method = RequestMethod.GET,
             beanClass = Handler.class,
-            beanMethod = "validarExistenciaUsuario",
+            beanMethod = "validateUserExistence",
             operation = @Operation(
-                operationId = "consultarUsuario",
-                summary = "Consultar usuario por documento de identidad",
-                description = "Busca y retorna la información de un usuario usando su documento de identidad",
-                tags = {"Usuarios"},
+                operationId = "getUserByDocument",
+                summary = "Get user by identity document",
+                description = "Search and return user information using their identity document",
+                tags = {"Users"},
                 parameters = {
                     @Parameter(
-                        name = "documentoIdentidad",
-                        description = "Número de documento de identidad del usuario",
+                        name = "documentIdentity",
+                        description = "User's identity document number",
                         required = true,
                         in = ParameterIn.PATH,
                         schema = @Schema(type = "string", example = "12345678")
@@ -174,34 +231,90 @@ public class RouterRest {
                 responses = {
                     @ApiResponse(
                         responseCode = "200",
-                        description = "Usuario encontrado",
+                        description = "User found",
                         content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UsuarioConsultaResponse.class),
+                            schema = @Schema(implementation = UserQueryResponse.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                value = "{\"code\":\"0\",\"mensaje\":\"Usuario encontrado\",\"usuario\":{\"id\":1,\"nombres\":\"Juan Carlos\",\"apellidos\":\"Pérez González\",\"correoElectronico\":\"juan.perez@email.com\",\"documentoIdentidad\":\"12345678\",\"fechaNacimiento\":\"1990-05-15\",\"telefono\":\"3001234567\",\"idRol\":1,\"salarioBase\":3500000}}"
+                                value = "{\"code\":\"0\",\"message\":\"User found\",\"user\":{\"id\":1,\"firstName\":\"Juan Carlos\",\"lastName\":\"Pérez González\",\"email\":\"juan.perez@email.com\",\"documentIdentity\":\"12345678\",\"birthDate\":\"1990-05-15\",\"phone\":\"3001234567\",\"roleId\":1,\"baseSalary\":3500000}}"
                             )
                         )
                     ),
                     @ApiResponse(
                         responseCode = "404",
-                        description = "Usuario no encontrado",
+                        description = "User not found",
                         content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UsuarioConsultaResponse.class),
+                            schema = @Schema(implementation = UserQueryResponse.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                value = "{\"code\":\"1\",\"mensaje\":\"Usuario no encontrado con documento: 87654321\",\"usuario\":null}"
+                                value = "{\"code\":\"1\",\"message\":\"User not found with document: 87654321\",\"user\":null}"
                             )
                         )
                     ),
                     @ApiResponse(
                         responseCode = "400",
-                        description = "Documento de identidad inválido",
+                        description = "Invalid identity document",
                         content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UsuarioConsultaResponse.class),
+                            schema = @Schema(implementation = UserQueryResponse.class),
                             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                                value = "{\"code\":\"1\",\"mensaje\":\"Documento de identidad inválido: 123abc. Debe contener entre 4 y 20 dígitos numéricos.\",\"usuario\":null}"
+                                value = "{\"code\":\"1\",\"message\":\"Invalid identity document: 123abc. Must contain between 4 and 20 numeric digits.\",\"user\":null}"
+                            )
+                        )
+                    )
+                }
+            )
+        ),
+        @RouterOperation(
+            path = "/api/v1/users/email/{email:.+}",
+            method = RequestMethod.GET,
+            beanClass = Handler.class,
+            beanMethod = "validateUserExistenceByEmail",
+            operation = @Operation(
+                operationId = "getUserByEmail",
+                summary = "Get user by email",
+                description = "Search and return user information using their email address",
+                tags = {"Users"},
+                parameters = {
+                    @Parameter(
+                        name = "email",
+                        description = "User's email address",
+                        required = true,
+                        in = ParameterIn.PATH,
+                        schema = @Schema(type = "string", example = "juan.perez@email.com")
+                    )
+                },
+                responses = {
+                    @ApiResponse(
+                        responseCode = "200",
+                        description = "User found",
+                        content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = UserQueryResponse.class),
+                            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                value = "{\"code\":\"0\",\"message\":\"User found\",\"user\":{\"id\":1,\"firstName\":\"Juan Carlos\",\"lastName\":\"Pérez González\",\"email\":\"juan.perez@email.com\",\"documentIdentity\":\"12345678\",\"birthDate\":\"1990-05-15\",\"phone\":\"3001234567\",\"roleId\":1,\"baseSalary\":3500000}}"
+                            )
+                        )
+                    ),
+                    @ApiResponse(
+                        responseCode = "404",
+                        description = "User not found",
+                        content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = UserQueryResponse.class),
+                            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                value = "{\"code\":\"1\",\"message\":\"User not found with email: test@email.com\",\"user\":null}"
+                            )
+                        )
+                    ),
+                    @ApiResponse(
+                        responseCode = "400",
+                        description = "Invalid email format",
+                        content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = UserQueryResponse.class),
+                            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                value = "{\"code\":\"1\",\"message\":\"Invalid email format: invalid-email\",\"user\":null}"
                             )
                         )
                     )
@@ -210,8 +323,10 @@ public class RouterRest {
         )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-        return route(POST("/api/v1/usuarios"), handler::registrarUsuario)
+        return route(POST("/api/v1/users"), handler::registerUser)
                 .andRoute(POST("/api/v1/login"), handler::login)
-                .andRoute(GET("/api/v1/usuarios/{documentoIdentidad}"), handler::validarExistenciaUsuario);
+                .andRoute(POST("/api/v1/auth/validate"), handler::validateToken)
+                .andRoute(GET("/api/v1/users/{documentIdentity}"), handler::validateUserExistence)
+                .andRoute(GET("/api/v1/users/email/{email:.+}"), handler::validateUserExistenceByEmail);
     }
 }

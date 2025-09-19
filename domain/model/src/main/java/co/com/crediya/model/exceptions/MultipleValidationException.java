@@ -7,7 +7,7 @@ public class MultipleValidationException extends RuntimeException {
     private final List<Tuple3<String, String, String>> errors;
 
     public MultipleValidationException(List<Tuple3<String, String, String>> errors) {
-        super("Se encontraron " + errors.size() + " errores de validación");
+        super("Found " + errors.size() + " errors of validate");
         this.errors = errors;
     }
 

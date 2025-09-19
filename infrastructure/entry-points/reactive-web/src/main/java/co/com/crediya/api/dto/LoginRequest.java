@@ -17,11 +17,11 @@ import jakarta.validation.constraints.Size;
 public class LoginRequest {
 
     @JsonProperty("email")
-    @NotBlank(message = "El email es obligatorio")
-    @Email(message = "El formato del email no es válido")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email format is not valid")
     private String email;
 
     @JsonProperty("password")
-    @NotBlank(message = "La contraseña es obligatoria")
+    @NotBlank(message = "Password is required")
     private String password;
 }
